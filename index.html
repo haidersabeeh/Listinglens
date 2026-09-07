@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ListingLens">
+<meta name="theme-color" content="#0b0e14">
+<title>ListingLens — real estate shot guide</title>
+<style>
+:root{
+  --bg:#0b0e14;
+  --surface:#141922;
+  --surface2:#1b2230;
+  --line:#242d3c;
+  --text:#f4f6fa;
+  --dim:#9aa4b2;
+  --accent:#f2b23e;
+  --accent-ink:#201601;
+  --rec:#ff453a;
+  --ok:#34c77b;
+  --glass:rgba(12,15,21,.62);
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+  overscroll-behavior:none;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:active{transform:scale(.96)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input{font:inherit}
+.screen{display:none;min-height:100dvh}
+.screen.active{display:block}
+
+/* ---------- Home ---------- */
+#home{padding:calc(env(safe-area-inset-top) + 28px) 20px calc(env(safe-area-inset-bottom) + 28px);max-width:520px;margin:0 auto}
+.logo{font-size:34px;font-weight:800;letter-spacing:-.03em}
+.logo b{color:var(--accent)}
+.tagline{color:var(--dim);margin:8px 0 26px;max-width:34ch}
+.field label{display:block;font-size:14px;color:var(--dim);margin-bottom:6px}
+.field input{
+  width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+  border-radius:14px;padding:14px 16px;font-size:16px;
+}
+.field input::placeholder{color:#5c6675}
+.field input:focus{outline:none;border-color:var(--accent)}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  border-radius:16px;padding:16px;font-size:17px;font-weight:650;
+  transition:transform .12s ease;
+}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:var(--surface);border:1px solid var(--line)}
+.btn-quiet{color:var(--dim);font-weight:500;padding:12px}
+.stack{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.chip-link{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:13px 16px;margin-top:12px;font-weight:600;
+}
+.chip-link span{color:var(--dim);font-weight:500}
+details.prep{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px}
+details.prep summary{list-style:none;padding:12px 0;font-weight:650;display:flex;justify-content:space-between;align-items:center}
+details.prep summary::-webkit-details-marker{display:none}
+details.prep summary::after{content:"+";color:var(--dim);font-size:20px;font-weight:400}
+details.prep[open] summary::after{content:"–"}
+details.prep ul{list-style:none;padding:0 0 14px}
+details.prep li{color:var(--dim);padding:7px 0;border-top:1px solid var(--line)}
+.plan{margin-top:28px}
+.plan h2{font-size:15px;color:var(--dim);font-weight:600;margin-bottom:10px}
+.plan ol{list-style:none;counter-reset:shot}
+.plan li{
+  counter-increment:shot;display:flex;align-items:baseline;gap:12px;
+  padding:9px 0;border-bottom:1px solid var(--line);
+}
+.plan li::before{
+  content:counter(shot);flex:0 0 24px;height:24px;border-radius:8px;
+  background:var(--surface2);color:var(--dim);font-size:12.5px;font-weight:700;
+  display:inline-flex;align-items:center;justify-content:center;transform:translateY(3px);
+}
+.plan .t{font-weight:600}
+.plan .k{color:var(--dim);font-size:13.5px;margin-left:auto;white-space:nowrap}
+.install{margin-top:26px;color:#5c6675;font-size:13.5px}
+
+/* ---------- Capture ---------- */
+#capture{position:fixed;inset:0;background:#000;overflow:hidden}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#cam.mirror{transform:scaleX(-1)}
+.grid-overlay{position:absolute;inset:0;pointer-events:none}
+.grid-overlay div{position:absolute;background:rgba(255,255,255,.26)}
+.grid-overlay .v1{left:33.33%;top:0;bottom:0;width:1px}
+.grid-overlay .v2{left:66.66%;top:0;bottom:0;width:1px}
+.grid-overlay .h1{top:33.33%;left:0;right:0;height:1px}
+.grid-overlay .h2{top:66.66%;left:0;right:0;height:1px}
+.grid-overlay.off{display:none}
+#levelWrap{position:absolute;left:0;right:0;top:44%;display:none;pointer-events:none;justify-content:center}
+#levelWrap.on{display:flex}
+#levelRef{position:absolute;width:74%;height:0;border-top:1px dashed rgba(255,255,255,.28)}
+#levelLine{width:58%;height:2px;background:rgba(255,255,255,.75);border-radius:2px;transition:background .15s}
+#levelLine.good{background:var(--ok);box-shadow:0 0 10px rgba(52,199,123,.7)}
+
+.topbar{
+  position:absolute;top:0;left:0;right:0;z-index:5;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);
+}
+.iconbtn{
+  width:40px;height:40px;border-radius:12px;flex:0 0 auto;
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.iconbtn.active{background:var(--accent);color:var(--accent-ink)}
+.iconbtn svg{width:20px;height:20px}
+.badge{
+  position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;
+  background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;padding:0 4px;
+}
+#shotCount{flex:1;text-align:center;font-size:14px;font-weight:650;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+#lensSel{
+  background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:var(--text);border:none;border-radius:12px;height:40px;padding:0 10px;
+  font-size:13.5px;font-weight:600;max-width:118px;appearance:none;-webkit-appearance:none;
+}
+.progress{position:absolute;top:calc(env(safe-area-inset-top) + 60px);left:14px;right:14px;height:3px;border-radius:2px;background:rgba(255,255,255,.18);z-index:5}
+#progressFill{height:100%;width:0%;border-radius:2px;background:var(--accent);transition:width .3s}
+
+.bottom{
+  position:absolute;left:0;right:0;bottom:0;z-index:6;
+  padding:10px 14px calc(env(safe-area-inset-bottom) + 14px);
+  background:linear-gradient(to top,rgba(0,0,0,.6),transparent);
+  display:flex;flex-direction:column;gap:12px;align-items:center;
+}
+.cue{
+  width:100%;max-width:480px;border-radius:var(--radius);
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.09);padding:14px 16px;
+}
+.cue-head{display:flex;align-items:center;gap:10px}
+.cue-head .room{color:var(--dim);font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.navbtn{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.navbtn svg{width:16px;height:16px}
+.cue-title-row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.cue h1{font-size:21px;font-weight:800;letter-spacing:-.02em;flex:1}
+.kind{
+  flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--accent);
+  background:rgba(242,178,62,.16);border-radius:999px;padding:4px 10px;
+}
+.done-tag{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--ok);background:rgba(52,199,123,.16);border-radius:999px;padding:4px 10px;display:none}
+.done-tag.show{display:inline-block}
+.move{display:flex;gap:8px;align-items:baseline;margin-top:9px;font-weight:600}
+.move svg{width:15px;height:15px;flex:0 0 auto;transform:translateY(2px);color:var(--accent)}
+.tip{color:var(--dim);font-size:14px;margin-top:6px}
+.cue-foot{display:flex;justify-content:flex-end;margin-top:8px}
+#skipBtn{color:var(--dim);font-size:14px;font-weight:600;padding:6px 8px}
+
+.shutter-row{display:flex;align-items:center;justify-content:center;gap:26px;width:100%;max-width:480px;position:relative}
+#timerPill{
+  position:absolute;top:-38px;left:50%;transform:translateX(-50%);
+  background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-radius:999px;padding:5px 14px;font-size:14px;font-weight:700;
+  font-variant-numeric:tabular-nums;display:none;
+}
+#timerPill.on{display:block}
+#timerPill.hit{color:var(--ok)}
+#shutterBtn{
+  width:78px;height:78px;border-radius:50%;flex:0 0 auto;
+  border:4px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;
+}
+#shutterBtn .core{width:60px;height:60px;border-radius:50%;background:var(--rec);transition:all .18s ease}
+#shutterBtn.photo .core{background:#fff}
+#shutterBtn.recording .core{width:30px;height:30px;border-radius:9px}
+.side-slot{width:52px;height:52px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+#thumbBtn{
+  width:52px;height:52px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.7);
+  display:none;background:#000;
+}
+#thumbBtn.show{display:block}
+#thumbBtn img,#thumbBtn video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+
+.overlay{
+  position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;
+  background:rgba(5,7,10,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  padding:24px;
+}
+.overlay.show{display:flex}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;max-width:400px;width:100%}
+.panel h2{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.panel p{color:var(--dim);margin-top:8px;font-size:15px}
+.panel .stack{margin-top:18px}
+
+/* ---------- Review sheet ---------- */
+#sheetBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:none}
+#sheetBackdrop.show{display:block}
+#sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:41;
+  background:var(--surface);border-radius:22px 22px 0 0;border-top:1px solid var(--line);
+  padding:14px 18px calc(env(safe-area-inset-bottom) + 16px);
+  transform:translateY(105%);transition:transform .28s cubic-bezier(.32,.72,.25,1);
+  max-height:88dvh;display:flex;flex-direction:column;gap:12px;
+}
+#sheet.show{transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){#sheet{transition:none}}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+#sheetTitle{font-size:17px;font-weight:750;text-align:center}
+#sheetMedia{border-radius:14px;overflow:hidden;background:#000;max-height:52dvh;display:flex;align-items:center;justify-content:center}
+#sheetMedia video,#sheetMedia img{max-width:100%;max-height:52dvh;display:block}
+#sheetActions{display:flex;flex-direction:column;gap:10px}
+.row2{display:flex;gap:10px}
+.row2 .btn{flex:1}
+.btn-danger{background:rgba(255,69,58,.14);color:var(--rec)}
+
+/* ---------- Checklist ---------- */
+#checklist{padding:calc(env(safe-area-inset-top) + 16px) 18px calc(env(safe-area-inset-bottom) + 30px);max-width:560px;margin:0 auto}
+.page-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.page-head .iconbtn{background:var(--surface);border:1px solid var(--line)}
+.page-head h1{font-size:22px;font-weight:800;letter-spacing:-.02em;flex:1}
+.page-head .count{color:var(--dim);font-weight:650;font-variant-numeric:tabular-nums}
+.bar{height:4px;border-radius:2px;background:var(--surface2);margin:10px 0 18px;overflow:hidden}
+.bar div{height:100%;background:var(--accent);width:0%;transition:width .3s;border-radius:2px}
+.section-label{font-size:14px;color:var(--dim);font-weight:650;margin:20px 0 8px}
+.prep-item{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;margin-bottom:8px;
+}
+.prep-item .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--accent-ink)}
+.prep-item.done .box{background:var(--ok);border-color:var(--ok)}
+.prep-item.done .lbl{color:var(--dim);text-decoration:line-through}
+.prep-item svg{width:13px;height:13px;opacity:0}
+.prep-item.done svg{opacity:1}
+.shot-row{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.shot-row summary{list-style:none;display:flex;align-items:center;gap:12px;padding:13px 14px}
+.shot-row summary::-webkit-details-marker{display:none}
+.ck-circle{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;color:var(--accent-ink);
+}
+.shot-row.done .ck-circle{background:var(--ok);border-color:var(--ok)}
+.ck-circle svg{width:14px;height:14px;opacity:0}
+.shot-row.done .ck-circle svg{opacity:1}
+.ck-main{flex:1;min-width:0}
+.ck-main .t{font-weight:650}
+.shot-row.done .ck-main .t{color:var(--dim)}
+.ck-main .r{color:var(--dim);font-size:13px}
+.ck-kind{color:var(--accent);font-size:12.5px;font-weight:700;white-space:nowrap}
+.ck-body{padding:0 14px 14px 54px;color:var(--dim);font-size:14px}
+.ck-body .mv{color:var(--text);font-weight:600;margin-bottom:4px}
+#checklist .btn-primary{margin-top:16px}
+
+/* ---------- Gallery ---------- */
+#gallery{padding:calc(env(safe-area-inset-top) + 16px) 18px calc(env(safe-area-inset-bottom) + 30px);max-width:560px;margin:0 auto}
+.note{
+  background:rgba(242,178,62,.1);border:1px solid rgba(242,178,62,.35);color:var(--accent);
+  border-radius:14px;padding:11px 14px;font-size:13.5px;margin-bottom:14px;
+}
+#galGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--line);text-align:left}
+.tile .media{aspect-ratio:3/4;background:#000;position:relative}
+.tile .media img,.tile .media video{width:100%;height:100%;object-fit:cover;display:block}
+.tile .media .k{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);border-radius:8px;padding:2px 8px;font-size:11.5px;font-weight:700}
+.tile .cap{padding:8px 10px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--dim);text-align:center;padding:60px 20px}
+
+#toast{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom) + 24px);left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--line);border-radius:999px;
+  padding:10px 18px;font-size:14px;font-weight:600;z-index:60;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ================= HOME ================= -->
+<section id="home" class="screen active">
+  <div class="logo">Listing<b>Lens</b></div>
+  <p class="tagline">Walk the house once. Leave with every clip your reel needs.</p>
+
+  <div class="field">
+    <label for="propInput">Property</label>
+    <input id="propInput" type="text" placeholder="1234 Maple Hollow Dr, Frisco" autocomplete="off">
+  </div>
+
+  <div class="stack">
+    <button class="btn btn-primary" id="startGuidedBtn">Start guided shoot</button>
+    <button class="btn btn-ghost" id="startChecklistBtn">Use the checklist instead</button>
+  </div>
+
+  <button class="chip-link" id="galleryChip" style="display:none">
+    Open gallery <span id="galleryChipCount"></span>
+  </button>
+
+  <details class="prep">
+    <summary>Prep the house first</summary>
+    <ul id="homePrep"></ul>
+  </details>
+
+  <div class="plan">
+    <h2>The shot plan</h2>
+    <ol id="planList"></ol>
+  </div>
+
+  <p class="install">Keep this as an app: in Safari, tap Share, then “Add to Home Screen.”</p>
+</section>
+
+<!-- ================= CAPTURE ================= -->
+<section id="capture" class="screen">
+  <video id="cam" autoplay muted playsinline webkit-playsinline></video>
+
+  <div class="grid-overlay" id="gridOverlay">
+    <div class="v1"></div><div class="v2"></div><div class="h1"></div><div class="h2"></div>
+  </div>
+  <div id="levelWrap"><div id="levelRef"></div><div id="levelLine"></div></div>
+
+  <div class="topbar">
+    <button class="iconbtn" id="backBtn" aria-label="Back to home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div id="shotCount">Shot 1 of 19</div>
+    <select id="lensSel" aria-label="Camera lens"></select>
+    <button class="iconbtn" id="gridBtn" aria-label="Toggle grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+    </button>
+    <button class="iconbtn" id="levelBtn" aria-label="Toggle level">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h5M16 12h5"/><circle cx="12" cy="12" r="2.6"/></svg>
+    </button>
+    <button class="iconbtn" id="galBtn" aria-label="Open gallery">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5-9 9"/></svg>
+      <span class="badge" id="galCount" style="display:none">0</span>
+    </button>
+  </div>
+  <div class="progress"><div id="progressFill"></div></div>
+
+  <div class="bottom">
+    <div class="cue">
+      <div class="cue-head">
+        <button class="navbtn" id="prevBtn" aria-label="Previous shot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="room" id="shotRoom">Front exterior</div>
+        <button class="navbtn" id="nextBtn" aria-label="Next shot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="cue-title-row">
+        <h1 id="shotTitle">Curb appeal</h1>
+        <span class="kind" id="shotKind">8-sec video</span>
+        <span class="done-tag" id="doneTag">Captured ✓</span>
+      </div>
+      <div class="move">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span id="shotMove"></span>
+      </div>
+      <p class="tip" id="shotTip"></p>
+      <div class="cue-foot"><button id="skipBtn">Skip this shot</button></div>
+    </div>
+
+    <div class="shutter-row">
+      <div id="timerPill">0:00 / 0:08</div>
+      <div class="side-slot"></div>
+      <button id="shutterBtn" aria-label="Record"><span class="core"></span></button>
+      <div class="side-slot">
+        <button id="thumbBtn" aria-label="Review last capture"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="camBlock">
+    <div class="panel">
+      <h2 id="camBlockTitle">Camera unavailable</h2>
+      <p id="camBlockMsg"></p>
+      <div class="stack">
+        <button class="btn btn-primary" id="retryBtn">Try again</button>
+        <button class="btn btn-ghost" id="camBlockBack">Back to home</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="wrap">
+    <div class="panel">
+      <h2>That’s a wrap 🎬</h2>
+      <p>Every shot on the list is covered. Save your clips to Photos, then build the reel.</p>
+      <div class="stack">
+        <button class="btn btn-primary" id="wrapGalBtn">Open gallery</button>
+        <button class="btn btn-ghost" id="wrapStayBtn">Keep shooting</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="rotate">
+    <div class="panel">
+      <h2>Turn to portrait</h2>
+      <p>Vertical is the format for Reels and TikTok. Shooting wide on purpose for MLS? Carry on.</p>
+      <div class="stack">
+        <button class="btn btn-ghost" id="rotDismiss">Shoot horizontal anyway</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHECKLIST ================= -->
+<section id="checklist" class="screen">
+  <div class="page-head">
+    <button class="iconbtn" id="ckBack" aria-label="Back to home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1>Shot checklist</h1>
+    <div class="count" id="ckCount">0/19</div>
+  </div>
+  <div class="bar"><div id="ckProgressFill"></div></div>
+  <p class="tip">Film these in the iPhone Camera app for full 4K quality, and check them off as you go.</p>
+
+  <div class="section-label">Before you shoot</div>
+  <div id="ckPrep"></div>
+
+  <div class="section-label">The shots, in walk order</div>
+  <div id="ckList"></div>
+
+  <button class="btn btn-primary" id="ckToGuided">Open guided camera</button>
+</section>
+
+<!-- ================= GALLERY ================= -->
+<section id="gallery" class="screen">
+  <div class="page-head">
+    <button class="iconbtn" id="galBack" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1>Gallery</h1>
+    <button class="iconbtn" id="shareAllBtn" aria-label="Share all">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+    </button>
+  </div>
+  <div class="note" id="unsavedNote" style="display:none"></div>
+  <div class="empty" id="galEmpty">Nothing captured yet. Your clips and photos will land here.</div>
+  <div id="galGrid"></div>
+</section>
+
+<!-- ================= REVIEW SHEET ================= -->
+<div id="sheetBackdrop"></div>
+<div id="sheet">
+  <div class="grab"></div>
+  <div id="sheetTitle"></div>
+  <div id="sheetMedia"></div>
+  <div id="sheetActions"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- Data ---------------- */
+const SHOTS = [
+  {id:"curb", room:"Front of the house", title:"Curb appeal", type:"video", dur:8,
+   move:"Walk slowly toward the front door",
+   tip:"Start at the street. Hold the phone at chest height and take small, slow steps \u2014 that keeps the video smooth."},
+  {id:"entry", room:"Front door", title:"Walk in the front door", type:"video", dur:6,
+   move:"Walk slowly through the open door",
+   tip:"Open the door all the way first. Walk in slowly, then stand still and count to 2 before you stop filming."},
+  {id:"foyer", room:"Entryway", title:"Entryway", type:"video", dur:5,
+   move:"Stand still, turn slowly left to right",
+   tip:"Turn like you\u2019re slowly showing the room to a friend. Slower than feels normal is perfect."},
+  {id:"living-v", room:"Living room", title:"Living room video", type:"video", dur:8,
+   move:"Stand in a corner, turn slowly across the room",
+   tip:"Pick the corner that shows the most of the room. All lights on, TV off."},
+  {id:"living-p", room:"Living room", title:"Living room photo", type:"photo",
+   move:"Stand still, hold the phone straight",
+   tip:"Chest height, phone not tilted up or down. If the room looks cramped, switch to 0.5\u00d7."},
+  {id:"kitchen-v", room:"Kitchen", title:"Kitchen video", type:"video", dur:8,
+   move:"Turn slowly across the counters and island",
+   tip:"Clear the counters \u2014 leave only 2 or 3 nice items. Wipe fingerprints off the appliances."},
+  {id:"kitchen-d", room:"Kitchen", title:"Kitchen close-up", type:"video", dur:5,
+   move:"Step slowly toward the prettiest detail",
+   tip:"Pick one thing \u2014 the backsplash, faucet, or stove \u2014 and move toward it slowly."},
+  {id:"kitchen-p", room:"Kitchen", title:"Kitchen photo", type:"photo",
+   move:"Stand at the kitchen entrance",
+   tip:"Stand back so the whole kitchen fits in the frame. Island lights on."},
+  {id:"dining", room:"Dining area", title:"Dining area", type:"video", dur:5,
+   move:"Turn slowly across the table",
+   tip:"Push in the chairs and straighten the table first."},
+  {id:"primary-v", room:"Primary suite", title:"Primary bedroom", type:"video", dur:6,
+   move:"Stand in the doorway, turn slowly across the room",
+   tip:"Make the bed neatly, turn the lamps on, close the closet doors."},
+  {id:"primary-b", room:"Primary suite", title:"Primary bathroom", type:"video", dur:5,
+   move:"Turn slowly from the sinks to the shower",
+   tip:"Toilet lid down, counters clear, fresh towels, every light on."},
+  {id:"primary-p", room:"Primary suite", title:"Primary bedroom photo", type:"photo",
+   move:"Stand in a corner, hold still",
+   tip:"Get the bed and a window in the same picture."},
+  {id:"bed2", room:"Bedroom 2", title:"Bedroom 2", type:"video", dur:5,
+   move:"Stand in the doorway, turn slowly",
+   tip:"Blinds open, light on, nothing on the floor."},
+  {id:"bed3", room:"Bedroom 3 or office", title:"Bedroom 3 / office", type:"video", dur:5, optional:true,
+   move:"Stand in the doorway, turn slowly",
+   tip:"If it\u2019s an office, tidy the desk and hide the cables. Skip if the house doesn\u2019t have this room."},
+  {id:"yard-v", room:"Backyard", title:"Backyard video", type:"video", dur:8,
+   move:"Walk slowly out the back door",
+   tip:"Put the cushions out, move hoses and toys out of view. Late afternoon light looks best."},
+  {id:"yard-p", room:"Backyard", title:"Backyard photo", type:"photo",
+   move:"Stand in a corner of the yard",
+   tip:"Get the grass, patio, and fence in one shot so buyers can tell how big the yard is."},
+  {id:"wow", room:"Best feature", title:"The wow feature", type:"video", dur:6, optional:true,
+   move:"Slowly show off the best thing in the house",
+   tip:"Game room, pool, big pantry, a view \u2014 end your video on the thing buyers will love most."},
+  {id:"hero", room:"Front of the house", title:"Cover photo", type:"photo",
+   move:"Step back, angle slightly, include some sky",
+   tip:"This is the main picture. Stand far back and use 1\u00d7 \u2014 the house looks more natural than with 0.5\u00d7."},
+  {id:"hook", room:"Anywhere with good light", title:"Your intro line", type:"video", dur:10, optional:true,
+   move:"Say one exciting line to the camera",
+   tip:"Switch to the selfie lens. Example: \u201cJust listed in [city] \u2014 wait until you see the backyard.\u201d Say it 3 times, keep the best one."}
+];
+
+const PREP = [
+  "Every light on — lamps too",
+  "Blinds open, all at the same height",
+  "Counters cleared, cords hidden",
+  "Toilet lids down, fresh towels out",
+  "Ceiling fans off (they look strange on video)",
+  "Pet gear and trash cans out of sight",
+  "Cars out of the driveway",
+  "Wipe your phone’s camera lens"
+];
+
+/* ---------------- State ---------------- */
+let stream = null;
+let rec = null, chunks = [], recording = false, recT0 = 0, recTick = null;
+let shotIdx = 0;
+const statuses = {};            // shotId -> "done" | "skip"
+const captures = [];            // {uid, shotId, kind, blob, url, name, saved}
+let pending = null;             // capture awaiting keep/retake
+let sheetMode = "new";          // "new" | "existing"
+let sheetItem = null;
+let wakeLock = null;
+let landscapeOk = false;
+let propName = "";
+let seq = 0;
+
+const $ = id => document.getElementById(id);
+const cam = $("cam");
+
+/* ---------------- Helpers ---------------- */
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("show"), 2400);
+}
+function slug(s){
+  return (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+}
+function fmt(sec){
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+function vidExt(){
+  return (rec && rec.mimeType && rec.mimeType.includes("webm")) ? "webm" : "mp4";
+}
+function makeName(shot, kind, ext){
+  const p = slug(propName) || "listing";
+  const n = String(SHOTS.indexOf(shot) + 1).padStart(2, "0");
+  return p + "-" + n + "-" + slug(shot.title) + "." + ext;
+}
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+  if (id !== "capture") releaseWake();
+}
+function completedCount(){ return Object.keys(statuses).length; }
+
+/* ---------------- Home ---------------- */
+function renderHome(){
+  $("planList").innerHTML = SHOTS.map(s =>
+    '<li><span class="t">' + s.title + (s.optional ? ' <span style="color:var(--dim);font-weight:500">(optional)</span>' : '') +
+    '</span><span class="k">' + (s.type === "video" ? s.dur + "-sec video" : "Photo") + '</span></li>'
+  ).join("");
+  $("homePrep").innerHTML = PREP.map(p => "<li>" + p + "</li>").join("");
+  updateGalleryChip();
+}
+function updateGalleryChip(){
+  const chip = $("galleryChip");
+  if (captures.length){
+    chip.style.display = "flex";
+    $("galleryChipCount").textContent = captures.length + (captures.length === 1 ? " item" : " items");
+  } else {
+    chip.style.display = "none";
+  }
+}
+
+/* ---------------- Camera ---------------- */
+function stopStream(){
+  if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+function camBlock(title, msg, canRetry){
+  $("camBlockTitle").textContent = title;
+  $("camBlockMsg").textContent = msg;
+  $("retryBtn").style.display = canRetry ? "" : "none";
+  $("camBlock").classList.add("show");
+}
+async function initCamera(deviceId){
+  $("camBlock").classList.remove("show");
+  if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    camBlock("Host me first",
+      "The camera only opens on a secure https page in Safari. If you’re previewing this inside Claude or from a local file, put it on GitHub Pages or Azure Static Web Apps, then open the link on your iPhone.",
+      false);
+    return;
+  }
+  stopStream();
+  const video = deviceId
+    ? { deviceId: { exact: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+    : { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } };
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: video, audio: true });
+  } catch (e1) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: video, audio: false });
+      toast("Recording without sound — mic was blocked");
+    } catch (e2) {
+      handleCamError(e2);
+      return;
+    }
+  }
+  cam.srcObject = stream;
+  try { await cam.play(); } catch (_) {}
+  markMirror();
+  populateLenses(deviceId);
+  requestWake();
+}
+function handleCamError(e){
+  const name = (e && e.name) || "";
+  if (name === "NotAllowedError" || name === "SecurityError"){
+    camBlock("Camera access was blocked",
+      "In Safari, tap the AA (or settings) icon in the address bar, open Website Settings, allow Camera and Microphone, then try again.",
+      true);
+  } else if (name === "NotFoundError"){
+    camBlock("No camera found", "This device didn’t report a camera to the browser.", true);
+  } else {
+    camBlock("Couldn’t start the camera", "Error: " + (name || e), true);
+  }
+}
+function cleanLabel(label){
+  const l = (label || "").toLowerCase();
+  if (l.includes("ultra")) return "0.5× Ultra wide";
+  if (l.includes("telephoto")) return "Telephoto";
+  if (l.includes("front")) return "Selfie";
+  if (l.includes("back")) return "1× Wide";
+  return label || "Camera";
+}
+async function populateLenses(currentId){
+  try {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const cams = devs.filter(d => d.kind === "videoinput");
+    const sel = $("lensSel");
+    sel.innerHTML = "";
+    const activeId = currentId || (stream && stream.getVideoTracks()[0].getSettings().deviceId);
+    cams.forEach(d => {
+      const o = document.createElement("option");
+      o.value = d.deviceId;
+      o.textContent = cleanLabel(d.label);
+      if (d.deviceId === activeId) o.selected = true;
+      sel.appendChild(o);
+    });
+    sel.style.display = cams.length > 1 ? "" : "none";
+  } catch (_) {}
+}
+function markMirror(){
+  const t = stream && stream.getVideoTracks()[0];
+  const facing = t && t.getSettings && t.getSettings().facingMode;
+  const label = (t && t.label || "").toLowerCase();
+  cam.classList.toggle("mirror", facing === "user" || label.includes("front"));
+}
+async function requestWake(){
+  try { if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen"); } catch (_) {}
+}
+function releaseWake(){
+  if (wakeLock){ wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+
+/* ---------------- Shot UI ---------------- */
+function curShot(){ return SHOTS[shotIdx]; }
+function renderShot(){
+  const s = curShot();
+  $("shotCount").textContent = "Shot " + (shotIdx + 1) + " of " + SHOTS.length;
+  $("shotRoom").textContent = s.room;
+  $("shotTitle").textContent = s.title;
+  $("shotKind").textContent = s.type === "video" ? s.dur + "-sec video" : "Photo";
+  $("shotMove").textContent = s.move;
+  $("shotTip").textContent = s.tip;
+  const tag = $("doneTag");
+  const st = statuses[s.id];
+  tag.textContent = st === "skip" ? "Skipped" : "Captured ✓";
+  tag.classList.toggle("show", !!st);
+  $("shutterBtn").classList.toggle("photo", s.type === "photo");
+  $("shutterBtn").setAttribute("aria-label", s.type === "photo" ? "Take photo" : "Record video");
+  $("progressFill").style.width = (completedCount() / SHOTS.length * 100) + "%";
+  $("skipBtn").textContent = s.optional ? "Skip — doesn’t apply" : "Skip this shot";
+}
+function move(delta){
+  if (recording){ toast("Stop recording first"); return; }
+  shotIdx = (shotIdx + delta + SHOTS.length) % SHOTS.length;
+  renderShot();
+}
+function advance(){
+  for (let i = 1; i <= SHOTS.length; i++){
+    const idx = (shotIdx + i) % SHOTS.length;
+    if (!statuses[SHOTS[idx].id]){ shotIdx = idx; renderShot(); return; }
+  }
+  renderShot();
+  $("wrap").classList.add("show");
+}
+function updateBadges(){
+  const b = $("galCount");
+  b.style.display = captures.length ? "flex" : "none";
+  b.textContent = captures.length;
+  updateGalleryChip();
+  const last = captures[captures.length - 1];
+  const tb = $("thumbBtn");
+  tb.classList.toggle("show", !!last);
+  if (last){
+    tb.innerHTML = "";
+    tb.appendChild(makeThumb(last));
+  }
+}
+function makeThumb(item){
+  if (item.kind === "photo"){
+    const img = document.createElement("img");
+    img.src = item.url; img.alt = "";
+    return img;
+  }
+  const v = document.createElement("video");
+  v.src = item.url; v.muted = true; v.playsInline = true; v.preload = "metadata";
+  v.addEventListener("loadedmetadata", () => { try { v.currentTime = 0.05; } catch (_) {} }, { once: true });
+  return v;
+}
+
+/* ---------------- Record / snap ---------------- */
+function pickMime(){
+  if (!window.MediaRecorder) return null;
+  const list = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"];
+  for (const m of list){ if (MediaRecorder.isTypeSupported(m)) return m; }
+  return "";
+}
+function shutter(){
+  const s = curShot();
+  if (!stream){ toast("Camera isn’t running"); return; }
+  if (s.type === "photo"){ snapPhoto(); return; }
+  if (recording) stopRec(); else startRec();
+}
+function startRec(){
+  const mime = pickMime();
+  if (mime === null){ toast("Video recording isn’t supported here — photos still work"); return; }
+  chunks = [];
+  try {
+    rec = mime
+      ? new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 10000000 })
+      : new MediaRecorder(stream);
+  } catch (e) {
+    try { rec = new MediaRecorder(stream); }
+    catch (e2) { toast("Couldn’t start recording"); return; }
+  }
+  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = onRecStop;
+  rec.start();
+  recording = true;
+  recT0 = Date.now();
+  $("shutterBtn").classList.add("recording");
+  const pill = $("timerPill");
+  pill.classList.add("on");
+  pill.classList.remove("hit");
+  tick();
+  recTick = setInterval(tick, 120);
+}
+function tick(){
+  const s = curShot();
+  const el = (Date.now() - recT0) / 1000;
+  const pill = $("timerPill");
+  pill.textContent = fmt(el) + " / " + fmt(s.dur || 0);
+  if (s.dur && el >= s.dur) pill.classList.add("hit");
+}
+function stopRec(){
+  if (!rec || rec.state === "inactive") return;
+  try { rec.stop(); } catch (_) {}
+  recording = false;
+  clearInterval(recTick);
+  $("shutterBtn").classList.remove("recording");
+  $("timerPill").classList.remove("on");
+}
+function onRecStop(){
+  const type = (rec && rec.mimeType) || "video/mp4";
+  const blob = new Blob(chunks, { type: type });
+  chunks = [];
+  if (!blob.size){ toast("That clip came back empty — try again"); return; }
+  const s = curShot();
+  makePending(s, "video", blob, vidExt());
+}
+function snapPhoto(){
+  const w = cam.videoWidth, h = cam.videoHeight;
+  if (!w){ toast("Camera isn’t ready yet"); return; }
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  c.getContext("2d").drawImage(cam, 0, 0, w, h);
+  c.toBlob(blob => {
+    if (!blob){ toast("Couldn’t capture that photo"); return; }
+    makePending(curShot(), "photo", blob, "jpg");
+  }, "image/jpeg", 0.92);
+}
+function makePending(shot, kind, blob, ext){
+  pending = {
+    uid: ++seq,
+    shotId: shot.id,
+    kind: kind,
+    blob: blob,
+    url: URL.createObjectURL(blob),
+    name: makeName(shot, kind, ext),
+    saved: false
+  };
+  openSheet(pending, "new");
+}
+
+/* ---------------- Review sheet ---------------- */
+function openSheet(item, mode){
+  sheetMode = mode;
+  sheetItem = item;
+  const shot = SHOTS.find(s => s.id === item.shotId);
+  $("sheetTitle").textContent = shot ? shot.title : "Capture";
+  const media = $("sheetMedia");
+  media.innerHTML = "";
+  if (item.kind === "photo"){
+    const img = document.createElement("img");
+    img.src = item.url; img.alt = "Captured photo";
+    media.appendChild(img);
+  } else {
+    const v = document.createElement("video");
+    v.src = item.url; v.controls = true; v.playsInline = true; v.preload = "metadata";
+    v.addEventListener("loadedmetadata", () => { try { v.currentTime = 0.05; } catch (_) {} }, { once: true });
+    media.appendChild(v);
+  }
+  const acts = $("sheetActions");
+  acts.innerHTML = "";
+  if (mode === "new"){
+    acts.appendChild(btn("Save to Photos", "btn btn-ghost", () => saveItem(item)));
+    const row = document.createElement("div");
+    row.className = "row2";
+    row.appendChild(btn("Retake", "btn btn-ghost", retake));
+    row.appendChild(btn("Keep it", "btn btn-primary", keepIt));
+    acts.appendChild(row);
+  } else {
+    acts.appendChild(btn("Save to Photos", "btn btn-primary", () => saveItem(item)));
+    const row = document.createElement("div");
+    row.className = "row2";
+    row.appendChild(btn("Delete", "btn btn-danger", deleteItem));
+    row.appendChild(btn("Close", "btn btn-ghost", closeSheet));
+    acts.appendChild(row);
+  }
+  $("sheetBackdrop").classList.add("show");
+  $("sheet").classList.add("show");
+}
+function btn(label, cls, fn){
+  const b = document.createElement("button");
+  b.className = cls;
+  b.textContent = label;
+  b.addEventListener("click", fn);
+  return b;
+}
+function closeSheet(){
+  $("sheet").classList.remove("show");
+  $("sheetBackdrop").classList.remove("show");
+  $("sheetMedia").innerHTML = "";
+  sheetItem = null;
+}
+function keepIt(){
+  if (!pending) { closeSheet(); return; }
+  captures.push(pending);
+  statuses[pending.shotId] = "done";
+  pending = null;
+  closeSheet();
+  updateBadges();
+  advance();
+}
+function retake(){
+  if (pending){ URL.revokeObjectURL(pending.url); pending = null; }
+  closeSheet();
+}
+function deleteItem(){
+  if (!sheetItem) return;
+  const i = captures.indexOf(sheetItem);
+  if (i > -1) captures.splice(i, 1);
+  URL.revokeObjectURL(sheetItem.url);
+  closeSheet();
+  updateBadges();
+  renderGallery();
+}
+async function saveItem(item){
+  const file = new File([item.blob], item.name, { type: item.blob.type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })){
+    try {
+      await navigator.share({ files: [file] });
+      item.saved = true;
+      toast("Sent to the share sheet — tap Save " + (item.kind === "photo" ? "Image" : "Video"));
+      renderGallery();
+    } catch (e) {
+      if (e && e.name !== "AbortError") downloadItem(item);
+    }
+  } else {
+    downloadItem(item);
+  }
+}
+function downloadItem(item){
+  const a = document.createElement("a");
+  a.href = item.url;
+  a.download = item.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  item.saved = true;
+  toast("Downloading " + item.name);
+  renderGallery();
+}
+
+/* ---------------- Checklist ---------------- */
+function renderChecklist(){
+  $("ckPrep").innerHTML = "";
+  PREP.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "prep-item";
+    b.innerHTML = '<span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg></span><span class="lbl">' + p + "</span>";
+    b.addEventListener("click", () => b.classList.toggle("done"));
+    $("ckPrep").appendChild(b);
+  });
+  const list = $("ckList");
+  list.innerHTML = "";
+  SHOTS.forEach(s => {
+    const d = document.createElement("details");
+    d.className = "shot-row" + (statuses[s.id] ? " done" : "");
+    d.innerHTML =
+      '<summary>' +
+        '<button class="ck-circle" aria-label="Mark done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg></button>' +
+        '<div class="ck-main"><div class="t">' + s.title + '</div><div class="r">' + s.room + '</div></div>' +
+        '<div class="ck-kind">' + (s.type === "video" ? s.dur + "-sec video" : "Photo") + '</div>' +
+      '</summary>' +
+      '<div class="ck-body"><div class="mv">' + s.move + '</div>' + s.tip + '</div>';
+    d.querySelector(".ck-circle").addEventListener("click", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (statuses[s.id]) delete statuses[s.id]; else statuses[s.id] = "done";
+      d.classList.toggle("done", !!statuses[s.id]);
+      ckProgress();
+    });
+    list.appendChild(d);
+  });
+  ckProgress();
+}
+function ckProgress(){
+  const n = completedCount();
+  $("ckCount").textContent = n + "/" + SHOTS.length;
+  $("ckProgressFill").style.width = (n / SHOTS.length * 100) + "%";
+}
+
+/* ---------------- Gallery ---------------- */
+function renderGallery(){
+  const grid = $("galGrid");
+  grid.innerHTML = "";
+  $("galEmpty").style.display = captures.length ? "none" : "block";
+  const unsaved = captures.filter(c => !c.saved).length;
+  const note = $("unsavedNote");
+  if (unsaved){
+    note.style.display = "block";
+    note.textContent = unsaved + (unsaved === 1 ? " item lives" : " items live") + " only in this session — save to Photos before you close the page.";
+  } else {
+    note.style.display = "none";
+  }
+  captures.forEach(item => {
+    const shot = SHOTS.find(s => s.id === item.shotId);
+    const t = document.createElement("button");
+    t.className = "tile";
+    const media = document.createElement("div");
+    media.className = "media";
+    media.appendChild(makeThumb(item));
+    const k = document.createElement("span");
+    k.className = "k";
+    k.textContent = item.kind === "photo" ? "Photo" : "Video";
+    media.appendChild(k);
+    const cap = document.createElement("div");
+    cap.className = "cap";
+    cap.textContent = (shot ? shot.title : "Capture") + (item.saved ? " · saved" : "");
+    t.appendChild(media);
+    t.appendChild(cap);
+    t.addEventListener("click", () => openSheet(item, "existing"));
+    grid.appendChild(t);
+  });
+}
+async function shareAll(){
+  if (!captures.length){ toast("Nothing to share yet"); return; }
+  const files = captures.map(c => new File([c.blob], c.name, { type: c.blob.type }));
+  if (navigator.canShare && navigator.canShare({ files: files })){
+    try {
+      await navigator.share({ files: files });
+      captures.forEach(c => c.saved = true);
+      renderGallery();
+    } catch (e) { /* canceled */ }
+  } else {
+    toast("Can’t share all at once here — save items one by one");
+  }
+}
+
+/* ---------------- Level ---------------- */
+let levelOn = false;
+function onMotion(e){
+  const g = e.accelerationIncludingGravity;
+  if (!g || g.x == null) return;
+  let t = Math.atan2(g.x, g.y) * 180 / Math.PI;
+  if (t > 90) t -= 180;
+  if (t < -90) t += 180;
+  const line = $("levelLine");
+  line.style.transform = "rotate(" + t.toFixed(1) + "deg)";
+  line.classList.toggle("good", Math.abs(t) <= 1.6);
+}
+async function toggleLevel(){
+  if (levelOn){
+    levelOn = false;
+    window.removeEventListener("devicemotion", onMotion);
+    $("levelWrap").classList.remove("on");
+    $("levelBtn").classList.remove("active");
+    return;
+  }
+  try {
+    if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function"){
+      const r = await DeviceMotionEvent.requestPermission();
+      if (r !== "granted"){ toast("Motion access declined — no level for now"); return; }
+    }
+  } catch (_) { toast("Couldn’t access motion sensors"); return; }
+  levelOn = true;
+  window.addEventListener("devicemotion", onMotion);
+  $("levelWrap").classList.add("on");
+  $("levelBtn").classList.add("active");
+}
+
+/* ---------------- Wiring ---------------- */
+$("propInput").addEventListener("input", e => { propName = e.target.value; });
+$("startGuidedBtn").addEventListener("click", () => { show("capture"); renderShot(); updateBadges(); initCamera(); });
+$("startChecklistBtn").addEventListener("click", () => { renderChecklist(); show("checklist"); });
+$("galleryChip").addEventListener("click", () => { renderGallery(); show("gallery"); });
+
+$("backBtn").addEventListener("click", () => {
+  if (recording){ toast("Stop recording first"); return; }
+  stopStream(); show("home"); renderHome();
+});
+$("prevBtn").addEventListener("click", () => move(-1));
+$("nextBtn").addEventListener("click", () => move(1));
+$("skipBtn").addEventListener("click", () => {
+  if (recording){ toast("Stop recording first"); return; }
+  statuses[curShot().id] = "skip";
+  advance();
+});
+$("shutterBtn").addEventListener("click", shutter);
+$("thumbBtn").addEventListener("click", () => {
+  const last = captures[captures.length - 1];
+  if (last) openSheet(last, "existing");
+});
+$("gridBtn").addEventListener("click", () => {
+  $("gridOverlay").classList.toggle("off");
+  $("gridBtn").classList.toggle("active", !$("gridOverlay").classList.contains("off"));
+});
+$("gridBtn").classList.add("active");
+$("levelBtn").addEventListener("click", toggleLevel);
+$("lensSel").addEventListener("change", e => {
+  if (recording){ toast("Stop recording first"); return; }
+  initCamera(e.target.value);
+});
+$("galBtn").addEventListener("click", () => {
+  if (recording){ toast("Stop recording first"); return; }
+  $("capture").dataset.was = "1";
+  stopStream();
+  renderGallery(); show("gallery");
+});
+$("retryBtn").addEventListener("click", () => initCamera());
+$("camBlockBack").addEventListener("click", () => { $("camBlock").classList.remove("show"); stopStream(); show("home"); });
+$("wrapGalBtn").addEventListener("click", () => { $("wrap").classList.remove("show"); $("capture").dataset.was = "1"; stopStream(); renderGallery(); show("gallery"); });
+$("wrapStayBtn").addEventListener("click", () => $("wrap").classList.remove("show"));
+$("rotDismiss").addEventListener("click", () => { landscapeOk = true; $("rotate").classList.remove("show"); });
+
+$("ckBack").addEventListener("click", () => { show("home"); renderHome(); });
+$("ckToGuided").addEventListener("click", () => { show("capture"); renderShot(); updateBadges(); initCamera(); });
+
+$("galBack").addEventListener("click", () => {
+  if ($("capture").dataset.was === "1"){ show("capture"); $("capture").dataset.was = ""; initCamera(); }
+  else { show("home"); renderHome(); }
+});
+$("shareAllBtn").addEventListener("click", shareAll);
+$("sheetBackdrop").addEventListener("click", () => {
+  if (sheetMode === "new") retake(); else closeSheet();
+});
+
+function checkOrientation(){
+  const onCapture = $("capture").classList.contains("active");
+  const landscape = window.innerWidth > window.innerHeight;
+  $("rotate").classList.toggle("show", onCapture && landscape && !landscapeOk && !recording);
+}
+window.addEventListener("resize", checkOrientation);
+window.addEventListener("orientationchange", checkOrientation);
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible" && $("capture").classList.contains("active")){
+    requestWake();
+    const t = stream && stream.getVideoTracks()[0];
+    if (!t || t.readyState === "ended") initCamera();
+    else { try { await cam.play(); } catch (_) {} }
+  }
+});
+
+window.addEventListener("beforeunload", e => {
+  if (captures.some(c => !c.saved)){
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+renderHome();
+renderShot();
+</script>
+</body>
+</html>
