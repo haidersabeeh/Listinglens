@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LL Air">
+<meta name="theme-color" content="#0b0e14">
+<title>ListingLens Air — drone shot guide</title>
+<style>
+:root{
+  --bg:#0b0e14;
+  --surface:#141922;
+  --surface2:#1b2230;
+  --line:#242d3c;
+  --text:#f4f6fa;
+  --dim:#9aa4b2;
+  --accent:#f2b23e;
+  --accent-ink:#201601;
+  --ok:#34c77b;
+  --warn:#ff9f0a;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+  padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 30px);
+  max-width:560px;margin:0 auto;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:active{transform:scale(.97)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input{font:inherit}
+
+.logo{font-size:30px;font-weight:800;letter-spacing:-.03em}
+.logo b{color:var(--accent)}
+.logo span{color:var(--dim);font-weight:600}
+.tagline{color:var(--dim);margin:6px 0 20px;max-width:36ch}
+
+.field label{display:block;font-size:14px;color:var(--dim);margin-bottom:6px}
+.field input{
+  width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+  border-radius:14px;padding:13px 16px;font-size:16px;
+}
+.field input::placeholder{color:#5c6675}
+.field input:focus{outline:none;border-color:var(--accent)}
+
+.progress-head{display:flex;align-items:baseline;justify-content:space-between;margin:20px 0 6px}
+.progress-head h2{font-size:15px;color:var(--dim);font-weight:650}
+.progress-head .count{font-weight:700;font-variant-numeric:tabular-nums}
+.bar{height:4px;border-radius:2px;background:var(--surface2);overflow:hidden;margin-bottom:4px}
+.bar div{height:100%;background:var(--accent);width:0%;transition:width .3s;border-radius:2px}
+
+.timer{
+  display:flex;align-items:center;gap:14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 16px;margin-top:16px;
+}
+.timer .val{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.01em;min-width:86px}
+.timer .lbl{color:var(--dim);font-size:13px}
+.timer .grow{flex:1;min-width:0}
+.timer .note{color:var(--warn);font-size:13px;font-weight:650;display:none}
+.timer .note.show{display:block}
+.tbtn{
+  border-radius:12px;padding:10px 16px;font-weight:700;flex:0 0 auto;
+  background:var(--accent);color:var(--accent-ink);
+}
+.tbtn.ghost{background:var(--surface2);color:var(--text)}
+
+.section-label{font-size:14px;color:var(--dim);font-weight:650;margin:24px 0 8px}
+
+.prep-item{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:12px 14px;margin-bottom:8px;
+}
+.prep-item .box{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--accent-ink)}
+.prep-item.done .box{background:var(--ok);border-color:var(--ok)}
+.prep-item.done .lbl{color:var(--dim);text-decoration:line-through}
+.prep-item svg{width:13px;height:13px;opacity:0}
+.prep-item.done svg{opacity:1}
+
+.settings{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:6px 16px;
+}
+.settings div{padding:10px 0;color:var(--dim);border-top:1px solid var(--line)}
+.settings div:first-child{border-top:none}
+.settings b{color:var(--text);font-weight:650}
+
+.shot-row{background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.shot-row summary{list-style:none;display:flex;align-items:center;gap:12px;padding:13px 14px}
+.shot-row summary::-webkit-details-marker{display:none}
+.ck-circle{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;color:var(--accent-ink);
+}
+.shot-row.done .ck-circle{background:var(--ok);border-color:var(--ok)}
+.ck-circle svg{width:14px;height:14px;opacity:0}
+.shot-row.done .ck-circle svg{opacity:1}
+.ck-main{flex:1;min-width:0}
+.ck-main .t{font-weight:650}
+.ck-main .t em{color:var(--dim);font-style:normal;font-weight:500}
+.shot-row.done .ck-main .t{color:var(--dim)}
+.ck-main .r{color:var(--dim);font-size:13px}
+.ck-kind{color:var(--accent);font-size:12.5px;font-weight:700;white-space:nowrap}
+.ck-body{padding:0 14px 14px 14px}
+.dia-row{display:flex;gap:14px;align-items:flex-start}
+.dia{
+  flex:0 0 76px;height:76px;border-radius:12px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;color:var(--accent);
+}
+.dia svg{width:56px;height:56px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.dia-text{flex:1;min-width:0}
+.mv{font-weight:650;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 8px}
+.chip{
+  background:var(--surface2);border:1px solid var(--line);color:var(--dim);
+  font-size:12.5px;font-weight:600;border-radius:999px;padding:4px 10px;
+}
+.tip{color:var(--dim);font-size:14px}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;width:100%;
+  border-radius:16px;padding:15px;font-size:16px;font-weight:650;margin-top:18px;
+  background:var(--surface);border:1px solid var(--line);
+}
+.install{margin-top:20px;color:#5c6675;font-size:13.5px}
+
+#toast{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom) + 24px);left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--line);border-radius:999px;
+  padding:10px 18px;font-size:14px;font-weight:600;z-index:60;opacity:0;transition:all .25s;
+  pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="logo">Listing<b>Lens</b> <span>Air</span></div>
+<p class="tagline">Every drone shot a listing needs, in one lap around the house.</p>
+
+<div class="field">
+  <label for="propInput">Property</label>
+  <input id="propInput" type="text" placeholder="1234 Maple Hollow Dr, Frisco" autocomplete="off">
+</div>
+
+<div class="progress-head">
+  <h2>Shots landed</h2>
+  <div class="count" id="count">0/12</div>
+</div>
+<div class="bar"><div id="fill"></div></div>
+
+<div class="timer">
+  <div class="val" id="timerVal">0:00</div>
+  <div class="grow">
+    <div class="lbl">Flight timer — land with at least 20% battery</div>
+    <div class="note" id="timerNote">15 minutes up — check your battery</div>
+  </div>
+  <button class="tbtn" id="timerBtn">Start</button>
+  <button class="tbtn ghost" id="timerReset">Reset</button>
+</div>
+
+<div class="section-label">Before you take off</div>
+<div id="prepWrap"></div>
+
+<div class="section-label">Set the camera once</div>
+<div class="settings" id="setList"></div>
+
+<div class="section-label">The flight plan</div>
+<div id="shotList"></div>
+
+<button class="btn" id="resetAll">Reset for the next house</button>
+<p class="install">Keep this as an app: in Safari, tap Share, then “Add to Home Screen.”</p>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- Data ---------------- */
+const PREFLIGHT = [
+  "FAA Part 107 certificate in hand — required when filming for a listing",
+  "Drone registered with the FAA",
+  "Airspace checked in the B4UFLY or Aloft app (get LAANC approval if it says you need it)",
+  "Wind under about 15 mph, no rain, no fog",
+  "Batteries fully charged, memory card in with free space",
+  "Propellers checked, gimbal cover off",
+  "Walk the yard first — look up for power lines, trees, and antennas",
+  "Let anyone at the house know you’re about to fly"
+];
+
+const SETTINGS = [
+  "<b>Video:</b> 4K at 30 frames per second",
+  "<b>Photo:</b> best quality (RAW + JPEG if your drone has it)",
+  "<b>Gridlines:</b> turn them on in the drone app",
+  "<b>Bright sun?</b> Use an ND8 or ND16 filter",
+  "<b>Mode:</b> fly in slow or cinematic mode so moves stay smooth"
+];
+
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';
+
+const SHOTS = [
+  {id:"approach", title:"Down-the-street opener", kind:"video", dur:10,
+   alt:"About 2 stories up (20–25 ft)", spd:"Very slow",
+   move:"Start low over the street and fly slowly straight toward the house.",
+   tip:"Keep the house in the middle of the screen the whole time. Great first clip for the reel.",
+   dia:'<path d="M28 27l5-4 5 4v8H28z"/><path d="M6 33h12" stroke-dasharray="3 3"/><path d="M18 30.8L22 33l-4 2.2z" fill="currentColor" stroke="none"/>'},
+  {id:"rise", title:"Rise-up reveal", kind:"video", dur:8,
+   alt:"Start at 10 ft, end near 60 ft", spd:"Very slow",
+   move:"Face the front door, then fly straight up slowly while tilting the camera down to keep the house in view.",
+   tip:"One smooth motion, no stops. Gentle thumbs.",
+   dia:'<path d="M12 28l6-5 6 5v9H12z"/><path d="M34 36V16" stroke-dasharray="3 3"/><path d="M31.8 16L34 11l2.2 5z" fill="currentColor" stroke="none"/>'},
+  {id:"orbit", title:"Circle around the house", kind:"video", dur:20,
+   alt:"50–80 ft up", spd:"Very slow",
+   move:"Fly a big, slow circle around the whole house, keeping it centered on your screen.",
+   tip:"This is the money shot. If your drone has a Point of Interest (circle) mode, let it fly the circle for you.",
+   dia:'<path d="M18 26l6-5 6 5v8H18z"/><ellipse cx="24" cy="29" rx="17" ry="10" stroke-dasharray="3 3"/><path d="M40 24.5l3.5 3-4.6 1.2z" fill="currentColor" stroke="none"/>'},
+  {id:"side", title:"Slide across the front", kind:"video", dur:8,
+   alt:"25–35 ft up", spd:"Very slow",
+   move:"Fly slowly sideways across the front of the house, corner to corner.",
+   tip:"Keep the same height all the way across.",
+   dia:'<path d="M18 28l6-5 6 5v8H18z"/><path d="M8 15h24" stroke-dasharray="3 3"/><path d="M32 12.8L36 15l-4 2.2z" fill="currentColor" stroke="none"/>'},
+  {id:"yard", title:"Backyard fly-over", kind:"video", dur:8,
+   alt:"30–40 ft up", spd:"Very slow",
+   move:"From behind the back fence, fly slowly over the yard toward the house, camera tilted a little down.",
+   tip:"Shows the patio and how big the yard is. Watch for trees and wires.",
+   dia:'<path d="M18 30l6-5 6 5v7H18z"/><path d="M24 6v12" stroke-dasharray="3 3"/><path d="M21.8 18L24 22l2.2-4z" fill="currentColor" stroke="none"/>'},
+  {id:"topdown", title:"Straight-down lot shot", kind:"video", dur:6,
+   alt:"150–200 ft up", spd:"Rise slowly",
+   move:"Hover high above the roof, point the camera straight down, then rise slowly.",
+   tip:"Shows the whole lot in one frame. Take a photo from up here too — buyers love seeing the property lines.",
+   dia:'<rect x="10" y="10" width="28" height="28" rx="3" stroke-dasharray="3 3"/><path d="M18 26l6-5 6 5v8H18z"/>'},
+  {id:"pullaway", title:"Fly-away ending", kind:"video", dur:10,
+   alt:"End around 100–150 ft", spd:"Slow and steady",
+   move:"Face the house, then fly up and backward at the same time, so the house shrinks and the neighborhood appears.",
+   tip:"Perfect last clip. Let it run a few extra seconds — you can always trim.",
+   dia:'<path d="M12 30l6-5 6 5v8H12z"/><path d="M26 25L37 13" stroke-dasharray="3 3"/><path d="M35 10l5-1-1.6 4.8z" fill="currentColor" stroke="none"/>'},
+  {id:"hood", title:"Neighborhood feature", kind:"video", dur:8, optional:true,
+   alt:"Whatever fits the feature", spd:"Very slow",
+   move:"Fly toward the best thing near the house — a park, pool, pond, or greenbelt.",
+   tip:"People buy the neighborhood too. Never fly over people or crowds.",
+   dia:'<path d="M8 28l5-4 5 4v8H8z"/><path d="M20 30h7" stroke-dasharray="3 3"/><path d="M27 27.8L31 30l-4 2.2z" fill="currentColor" stroke="none"/><circle cx="38" cy="26" r="4.5"/><path d="M38 30.5V36"/>'},
+  {id:"photo45", title:"Classic front photo", kind:"photo",
+   alt:"25–40 ft up, out front",
+   move:"Hover in front of the house, a little above roof height, camera angled down at it.",
+   tip:"THE drone listing photo. Take 3 at slightly different heights and pick the best.",
+   dia:'<path d="M26 27l6-5 6 5v9H26z"/><circle cx="10" cy="10" r="4"/><circle cx="10" cy="10" r="1.3" fill="currentColor" stroke="none"/><path d="M13.5 13.5l10 9.5" stroke-dasharray="3 3"/>'},
+  {id:"photoRear", title:"Backyard photo", kind:"photo",
+   alt:"30–40 ft up, out back",
+   move:"Same idea from the backyard side.",
+   tip:"Get the patio, yard, and back of the house in one frame.",
+   dia:'<path d="M10 27l6-5 6 5v9H10z"/><circle cx="38" cy="10" r="4"/><circle cx="38" cy="10" r="1.3" fill="currentColor" stroke="none"/><path d="M34.5 13.5L24 23" stroke-dasharray="3 3"/>'},
+  {id:"photoWide", title:"High and wide photo", kind:"photo",
+   alt:"150+ ft up",
+   move:"Go high, back away, and fit the house plus the area around it in one picture.",
+   tip:"Shows what’s nearby — schools, parks, open land. Great for the listing description.",
+   dia:'<path d="M20 32l4-3.5 4 3.5v6h-8z"/><path d="M24 8L9 38M24 8l15 30" stroke-dasharray="3 3"/>'},
+  {id:"twilight", title:"Twilight bonus", kind:"photo", optional:true,
+   alt:"25–40 ft up, out front",
+   move:"Come back at sunset, turn on every light in the house, and retake the front photo.",
+   tip:"Twilight photos get the most clicks online. Shoot 20–30 minutes after sunset.",
+   dia:'<path d="M16 28l6-5 6 5v9H16z"/><path d="M36 8a7 7 0 1 0 6 10 8 8 0 0 1-6-10z"/>'}
+];
+
+/* ---------------- State ---------------- */
+const done = new Set();
+const $ = id => document.getElementById(id);
+
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+/* ---------------- Render ---------------- */
+function renderPrep(){
+  const w = $("prepWrap");
+  w.innerHTML = "";
+  PREFLIGHT.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "prep-item";
+    b.innerHTML = '<span class="box">' + CHECK + '</span><span class="lbl">' + p + "</span>";
+    b.addEventListener("click", () => b.classList.toggle("done"));
+    w.appendChild(b);
+  });
+}
+function renderSettings(){
+  $("setList").innerHTML = SETTINGS.map(s => "<div>" + s + "</div>").join("");
+}
+function renderShots(){
+  const list = $("shotList");
+  list.innerHTML = "";
+  SHOTS.forEach(s => {
+    const d = document.createElement("details");
+    d.className = "shot-row" + (done.has(s.id) ? " done" : "");
+    const kind = s.kind === "video" ? s.dur + "-sec video" : "Photo";
+    const chips =
+      '<span class="chip">Height: ' + s.alt + '</span>' +
+      (s.spd ? '<span class="chip">Speed: ' + s.spd + '</span>' : '') +
+      (s.kind === "video" ? '<span class="chip">Length: about ' + s.dur + ' sec</span>' : '');
+    d.innerHTML =
+      '<summary>' +
+        '<button class="ck-circle" aria-label="Mark done">' + CHECK + '</button>' +
+        '<div class="ck-main"><div class="t">' + s.title + (s.optional ? ' <em>(optional)</em>' : '') + '</div></div>' +
+        '<div class="ck-kind">' + kind + '</div>' +
+      '</summary>' +
+      '<div class="ck-body">' +
+        '<div class="dia-row">' +
+          '<div class="dia"><svg viewBox="0 0 48 48">' + s.dia + '</svg></div>' +
+          '<div class="dia-text"><div class="mv">' + s.move + '</div></div>' +
+        '</div>' +
+        '<div class="chips">' + chips + '</div>' +
+        '<p class="tip">' + s.tip + '</p>' +
+      '</div>';
+    d.querySelector(".ck-circle").addEventListener("click", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (done.has(s.id)) done.delete(s.id); else done.add(s.id);
+      d.classList.toggle("done", done.has(s.id));
+      progress();
+    });
+    list.appendChild(d);
+  });
+  progress();
+}
+function progress(){
+  $("count").textContent = done.size + "/" + SHOTS.length;
+  $("fill").style.width = (done.size / SHOTS.length * 100) + "%";
+}
+
+/* ---------------- Flight timer ---------------- */
+let t0 = null, elapsed = 0, ticker = null;
+function fmt(sec){
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+function tick(){
+  const total = elapsed + (t0 ? (Date.now() - t0) / 1000 : 0);
+  $("timerVal").textContent = fmt(total);
+  $("timerNote").classList.toggle("show", total >= 900);
+}
+$("timerBtn").addEventListener("click", () => {
+  if (t0){
+    elapsed += (Date.now() - t0) / 1000;
+    t0 = null;
+    clearInterval(ticker);
+    $("timerBtn").textContent = "Start";
+  } else {
+    t0 = Date.now();
+    ticker = setInterval(tick, 500);
+    $("timerBtn").textContent = "Pause";
+  }
+  tick();
+});
+$("timerReset").addEventListener("click", () => {
+  t0 = null; elapsed = 0;
+  clearInterval(ticker);
+  $("timerBtn").textContent = "Start";
+  $("timerVal").textContent = "0:00";
+  $("timerNote").classList.remove("show");
+});
+
+/* ---------------- Reset ---------------- */
+$("resetAll").addEventListener("click", () => {
+  done.clear();
+  $("propInput").value = "";
+  document.querySelectorAll(".prep-item").forEach(b => b.classList.remove("done"));
+  renderShots();
+  toast("Fresh start — ready for the next house");
+});
+
+renderPrep();
+renderSettings();
+renderShots();
+</script>
+</body>
+</html>
